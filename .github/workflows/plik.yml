@@ -1,0 +1,44 @@
+name: Automatyzacja dla apki Node.js !
+on:
+  push:
+    branches:
+    - main
+  workflow_dispatch:
+
+jobs:
+  my_job:
+    name: deploy to staging
+    runs-on: ubuntu-22.04
+    
+    steps:
+       - uses: actions/checkout@v4
+       - name: Setup Node
+         uses: actions/setup-node@v4
+         with:
+           node-version: '18.19.1'
+       - name: Install Dependencies
+         run: npm install
+  
+       - name: Akceptacja klucza1
+         run: |
+            mkdir -p ~/.ssh
+            ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts
+            chmod 700 ~/.ssh
+            chmod 644 ~/.ssh/known_hosts
+    
+       - name: Połączenie z serwerem poprzez SSH
+         uses: appleboy/ssh-action@v1.2.2
+         with:
+            host: ${{secrets.HOST}}
+            username: ${{secrets.USERNAME}}
+            password: ${{secrets.PASSWORD}}
+            port: ${{secrets.PORT}}
+            script: |
+                if [ ! -d "Nodejes-automatyzacja" ]; then
+                    git clone git@github.com:Jaga0605/Nodejs-automatyzacja.git
+                else
+                    cd Nodejs-automatyzacja
+                    git pull origin main 
+                fi
+                cd Nodejs-automatyzacja
+                npm install
